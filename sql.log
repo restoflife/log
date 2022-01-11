@@ -1,0 +1,2 @@
+2022-01-11 14:40:19	ERROR	failed to initialize database, got error Error 1045: Access denied for user 'user'@'localhost' (using password: YES)
+2022-01-11 14:56:44	ERROR	[GORM]	failed to initialize database, got error Error 1045: Access denied for user 'user'@'localhost' (using password: YES)

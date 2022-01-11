@@ -23,9 +23,9 @@ type XormLogger struct {
 	level  log.LogLevel
 }
 
-func NewXormLogger(zl *zap.Logger) *XormLogger {
+func NewXormLogger(zapLogger *zap.Logger) *XormLogger {
 	return &XormLogger{
-		logger: zl.Named(XORM),
+		logger: zapLogger.Named(XORM),
 		off:    false,
 		show:   true,
 	}
