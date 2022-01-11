@@ -151,6 +151,10 @@ func Panic(msg string, f ...zapcore.Field) {
 	logger.Panic(msg, fn(f...)...)
 }
 
+func Fatal(msg string, f ...zapcore.Field) {
+	logger.Fatal(msg, f...)
+}
+
 func fn(f ...zapcore.Field) []zapcore.Field {
 	_, file, line, _ := runtime.Caller(2)
 	return append(f, zap.String("func", fmt.Sprintf("%s:%d", file, line)))
