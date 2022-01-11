@@ -12,6 +12,7 @@ package gorm
 import (
 	"context"
 	"errors"
+	"github.com/restoflife/log/constant"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -82,13 +83,13 @@ func (l Logger) Trace(_ context.Context, begin time.Time, fc func() (string, int
 	switch {
 	case err != nil && l.LogLevel >= logger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
 		sql, rows := fc()
-		l.logger().Error("[GORM]", zap.Error(err), zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.logger().Error(constant.GORM, zap.Error(err), zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= logger.Warn:
 		sql, rows := fc()
-		l.logger().Warn("[GORM]", zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.logger().Warn(constant.GORM, zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
 	case l.LogLevel >= logger.Info:
 		sql, rows := fc()
-		l.logger().Debug("[GORM]", zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.logger().Debug(constant.GORM, zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
 	}
 }
 

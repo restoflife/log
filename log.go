@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"github.com/restoflife/log/constant"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -132,7 +133,7 @@ func createFileEncoder() zapcore.Encoder {
 
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
-	enc.AppendString(t.Format("2006-01-02 15:04:05"))
+	enc.AppendString(t.Format(constant.Layout))
 }
 
 func Info(msg string, f ...zapcore.Field) {

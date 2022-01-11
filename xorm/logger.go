@@ -11,6 +11,7 @@ package xorm
 
 import (
 	"fmt"
+	"github.com/restoflife/log/constant"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"xorm.io/xorm/log"
@@ -25,7 +26,7 @@ type Logger struct {
 
 func New(zl *zap.Logger) *Logger {
 	return &Logger{
-		logger: zl.Named("[XORM]"),
+		logger: zl.Named(constant.XORM),
 		off:    false,
 		show:   true,
 	}
