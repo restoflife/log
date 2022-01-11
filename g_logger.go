@@ -7,45 +7,44 @@
  * @FilePath: gorm/logger.go
  */
 
-package gorm
+package log
 
 import (
 	"context"
 	"errors"
-	"github.com/restoflife/log/constant"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	glog "gorm.io/gorm/logger"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 )
 
-type Logger struct {
+type GormLogger struct {
 	ZapLogger                 *zap.Logger
-	LogLevel                  logger.LogLevel
+	LogLevel                  glog.LogLevel
 	SlowThreshold             time.Duration
 	SkipCallerLookup          bool
 	IgnoreRecordNotFoundError bool
 }
 
-func New(zapLogger *zap.Logger) Logger {
-	return Logger{
+func NewGormLogger(zapLogger *zap.Logger) GormLogger {
+	return GormLogger{
 		ZapLogger:                 zapLogger,
-		LogLevel:                  logger.Warn,
+		LogLevel:                  glog.Warn,
 		SlowThreshold:             100 * time.Millisecond,
 		SkipCallerLookup:          false,
 		IgnoreRecordNotFoundError: false,
 	}
 }
 
-func (l Logger) SetAsDefault() {
-	logger.Default = l
+func (l GormLogger) SetAsDefault() {
+	glog.Default = l
 }
 
-func (l Logger) LogMode(level logger.LogLevel) logger.Interface {
-	return Logger{
+func (l GormLogger) LogMode(level glog.LogLevel) glog.Interface {
+	return GormLogger{
 		ZapLogger:                 l.ZapLogger,
 		SlowThreshold:             l.SlowThreshold,
 		LogLevel:                  level,
@@ -54,42 +53,42 @@ func (l Logger) LogMode(level logger.LogLevel) logger.Interface {
 	}
 }
 
-func (l Logger) Info(_ context.Context, str string, args ...interface{}) {
-	if l.LogLevel < logger.Info {
+func (l GormLogger) Info(_ context.Context, str string, args ...interface{}) {
+	if l.LogLevel < glog.Info {
 		return
 	}
 	l.logger().Sugar().Debugf(str, args...)
 }
 
-func (l Logger) Warn(_ context.Context, str string, args ...interface{}) {
-	if l.LogLevel < logger.Warn {
+func (l GormLogger) Warn(_ context.Context, str string, args ...interface{}) {
+	if l.LogLevel < glog.Warn {
 		return
 	}
 	l.logger().Sugar().Warnf(str, args...)
 }
 
-func (l Logger) Error(_ context.Context, str string, args ...interface{}) {
-	if l.LogLevel < logger.Error {
+func (l GormLogger) Error(_ context.Context, str string, args ...interface{}) {
+	if l.LogLevel < glog.Error {
 		return
 	}
 	l.logger().Sugar().Errorf(str, args...)
 }
 
-func (l Logger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
+func (l GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
 	if l.LogLevel <= 0 {
 		return
 	}
 	elapsed := time.Since(begin)
 	switch {
-	case err != nil && l.LogLevel >= logger.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
+	case err != nil && l.LogLevel >= glog.Error && (!l.IgnoreRecordNotFoundError || !errors.Is(err, gorm.ErrRecordNotFound)):
 		sql, rows := fc()
-		l.logger().Error(constant.GORM, zap.Error(err), zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
-	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= logger.Warn:
+		l.logger().Error(GORM, zap.Error(err), zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
+	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= glog.Warn:
 		sql, rows := fc()
-		l.logger().Warn(constant.GORM, zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
-	case l.LogLevel >= logger.Info:
+		l.logger().Warn(GORM, zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
+	case l.LogLevel >= glog.Info:
 		sql, rows := fc()
-		l.logger().Debug(constant.GORM, zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.logger().Debug(GORM, zap.String("latency", elapsed.String()), zap.Int64("rows", rows), zap.String("sql", sql))
 	}
 }
 
@@ -97,7 +96,7 @@ var (
 	gormPackage = filepath.Join("gorm.io", "gorm")
 )
 
-func (l Logger) logger() *zap.Logger {
+func (l GormLogger) logger() *zap.Logger {
 	for i := 2; i < 15; i++ {
 		_, file, _, ok := runtime.Caller(i)
 		switch {

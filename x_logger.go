@@ -7,34 +7,33 @@
  * @FilePath: xorm/logger.go
  */
 
-package xorm
+package log
 
 import (
 	"fmt"
-	"github.com/restoflife/log/constant"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"xorm.io/xorm/log"
 )
 
-type Logger struct {
+type XormLogger struct {
 	logger *zap.Logger
 	off    bool
 	show   bool
 	level  log.LogLevel
 }
 
-func New(zl *zap.Logger) *Logger {
-	return &Logger{
-		logger: zl.Named(constant.XORM),
+func NewXormLogger(zl *zap.Logger) *XormLogger {
+	return &XormLogger{
+		logger: zl.Named(XORM),
 		off:    false,
 		show:   true,
 	}
 }
 
-func (o *Logger) BeforeSQL(_ log.LogContext) {}
+func (o *XormLogger) BeforeSQL(_ log.LogContext) {}
 
-func (o *Logger) AfterSQL(ctx log.LogContext) {
+func (o *XormLogger) AfterSQL(ctx log.LogContext) {
 	sql := fmt.Sprintf("%v %v", ctx.SQL, ctx.Args)
 	var level zapcore.Level
 	if ctx.Err != nil {
@@ -46,23 +45,23 @@ func (o *Logger) AfterSQL(ctx log.LogContext) {
 	lg.Check(level, "").Write(zap.String("sql", sql), zap.String("latency", ctx.ExecuteTime.String()), zap.Error(ctx.Err))
 }
 
-func (o *Logger) Debugf(format string, v ...interface{}) {
+func (o *XormLogger) Debugf(format string, v ...interface{}) {
 	o.logger.Debug(fmt.Sprintf(format, v...))
 }
 
-func (o *Logger) Infof(format string, v ...interface{}) {
+func (o *XormLogger) Infof(format string, v ...interface{}) {
 	o.logger.Info(fmt.Sprintf(format, v...))
 }
 
-func (o *Logger) Warnf(format string, v ...interface{}) {
+func (o *XormLogger) Warnf(format string, v ...interface{}) {
 	o.logger.Warn(fmt.Sprintf(format, v...))
 }
 
-func (o *Logger) Errorf(format string, v ...interface{}) {
+func (o *XormLogger) Errorf(format string, v ...interface{}) {
 	o.logger.Error(fmt.Sprintf(format, v...))
 }
 
-func (o *Logger) Level() log.LogLevel {
+func (o *XormLogger) Level() log.LogLevel {
 	if o.off {
 		return log.LOG_OFF
 	}
@@ -87,13 +86,13 @@ func (o *Logger) Level() log.LogLevel {
 	return log.LOG_UNKNOWN
 }
 
-func (o *Logger) SetLevel(l log.LogLevel) {
+func (o *XormLogger) SetLevel(l log.LogLevel) {
 	o.level = l
 }
 
-func (o *Logger) ShowSQL(b ...bool) {
+func (o *XormLogger) ShowSQL(b ...bool) {
 	o.show = b[0]
 }
-func (o *Logger) IsShowSQL() bool {
+func (o *XormLogger) IsShowSQL() bool {
 	return o.show
 }
