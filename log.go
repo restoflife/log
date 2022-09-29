@@ -68,6 +68,11 @@ func (l *Config) NewLogger() (*zap.Logger, error) {
 				// savings, leap seconds, etc. The default is not to remove old log files
 				// based on age.
 				MaxAge: l.MaxAge,
+
+				// LocalTime determines if the time used for formatting the timestamps in
+				// backup files is the computer's local time.  The default is to use UTC
+				// time.
+				LocalTime: true,
 			}),
 			createLevelEnablerFunc(l.Level),
 		),
@@ -94,15 +99,15 @@ func createLevelEnablerFunc(input string) zap.LevelEnablerFunc {
 	}
 }
 
-//Log console configuration
+// Log console configuration
 func createConsoleEncoder() zapcore.Encoder {
 
 	encoderConfig := zap.NewDevelopmentEncoderConfig()
 
-	//Log time format
+	// Log time format
 	encoderConfig.EncodeTime = timeEncoder
 
-	//Serializes the level to an all uppercase string and adds a color
+	// Serializes the level to an all uppercase string and adds a color
 	encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 
 	encoderConfig.EncodeDuration = zapcore.SecondsDurationEncoder
@@ -112,15 +117,15 @@ func createConsoleEncoder() zapcore.Encoder {
 	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
-//Log file configuration
+// Log file configuration
 func createFileEncoder() zapcore.Encoder {
 
 	encoderConfig := zap.NewProductionEncoderConfig()
 
-	//Log time format
+	// Log time format
 	encoderConfig.EncodeTime = timeEncoder
 
-	//Serializes the level to an all uppercase string
+	// Serializes the level to an all uppercase string
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 
 	encoderConfig.EncodeDuration = zapcore.SecondsDurationEncoder
