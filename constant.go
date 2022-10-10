@@ -10,7 +10,8 @@
 package log
 
 const (
-	Layout = "2006-01-02 15:04:05"
-	XORM   = "[XORM]"
-	GORM   = "[GORM]"
+	Layout      = "2006-01-02 15:04:05"
+	RFC3339Nano = "2006-01-02T15:04:05.000Z0700"
+	XORM        = "[XORM]"
+	GORM        = "[GORM]"
 )

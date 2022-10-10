@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"testing"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -16,7 +17,7 @@ func TestNew(t *testing.T) {
 		Filename: "error.log",
 	})
 	defer Sync()
-	Info("info", zap.String("level", "info"))
+	Info("info")
 	Debug("debug", zap.String("level", "debug"))
 	Error("error", zap.Error(errors.New("error")))
 }
@@ -27,12 +28,13 @@ func TestNewXormLogger(t *testing.T) {
 		Filename: "sql.log",
 	})
 	defer Sync()
-	db, err := xorm.NewEngine("mysql", "root:123@/test?charset=utf8")
+	db, err := xorm.NewEngine("mysql", "root:mysql@/demo?charset=utf8")
 	if err != nil {
 		return
 	}
 	db.SetLogger(NewXormLogger(Logger()))
 	db.ShowSQL(true)
+	db.Table("xx").Where(builder.Eq{"id": 1}).Exist()
 }
 func TestNewGormLogger(t *testing.T) {
 	New(&Config{
@@ -42,7 +44,7 @@ func TestNewGormLogger(t *testing.T) {
 	defer Sync()
 	lg := NewGormLogger(Logger())
 	lg.SetAsDefault()
-	dsn := "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:mysql@tcp(127.0.0.1:3306)/demo?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.New(mysql.Config{DSN: dsn}), &gorm.Config{Logger: lg})
 	if err != nil {
 		return

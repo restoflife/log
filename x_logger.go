@@ -25,7 +25,8 @@ type XormLogger struct {
 
 func NewXormLogger(zapLogger *zap.Logger) *XormLogger {
 	return &XormLogger{
-		logger: zapLogger.Named(XORM),
+		// logger: zapLogger.Named(XORM),
+		logger: zapLogger,
 		off:    false,
 		show:   true,
 	}
@@ -42,7 +43,7 @@ func (o *XormLogger) AfterSQL(ctx log.LogContext) {
 		level = zapcore.InfoLevel
 	}
 	lg := o.logger
-	lg.Check(level, "").Write(zap.String("sql", sql), zap.String("latency", ctx.ExecuteTime.String()), zap.Error(ctx.Err))
+	lg.Check(level, XORM).Write(zap.String("SQL", sql), zap.String("latency", ctx.ExecuteTime.String()), zap.Error(ctx.Err))
 }
 
 func (o *XormLogger) Debugf(format string, v ...interface{}) {

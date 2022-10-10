@@ -13,9 +13,9 @@ import (
 type Config struct {
 	Level      string `json:"level"`
 	Filename   string `json:"file"`
-	MaxSize    int    `json:"maxSize"`
-	MaxBackups int    `json:"maxBackups"`
-	MaxAge     int    `json:"maxAge"`
+	MaxSize    int    `json:"max_size"`
+	MaxBackups int    `json:"max_backups"`
+	MaxAge     int    `json:"max_age"`
 }
 
 var logger *zap.Logger
@@ -137,7 +137,7 @@ func createFileEncoder() zapcore.Encoder {
 
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
-	enc.AppendString(t.Format(Layout))
+	enc.AppendString(t.Format(RFC3339Nano))
 }
 
 func Info(msg string, f ...zapcore.Field) {

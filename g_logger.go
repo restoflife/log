@@ -30,7 +30,7 @@ type GormLogger struct {
 
 func NewGormLogger(zapLogger *zap.Logger) GormLogger {
 	return GormLogger{
-		ZapLogger:                 zapLogger.Named(GORM),
+		ZapLogger:                 zapLogger,
 		LogLevel:                  glog.Warn,
 		SlowThreshold:             100 * time.Millisecond,
 		SkipCallerLookup:          false,
@@ -87,7 +87,7 @@ func (l GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string,
 	case l.SlowThreshold != 0 && elapsed > l.SlowThreshold && l.LogLevel >= glog.Warn:
 		level = zapcore.WarnLevel
 	case l.LogLevel >= glog.Info:
-		level = zapcore.DebugLevel
+		level = zapcore.InfoLevel
 	}
-	lg.Check(level, "").Write(zap.String("sql", sql), zap.Int64("rows", rows), zap.String("latency", elapsed.String()), zap.Error(err))
+	lg.Check(level, GORM).Write(zap.String("SQL", sql), zap.Int64("rows", rows), zap.String("latency", elapsed.String()), zap.Error(err))
 }
