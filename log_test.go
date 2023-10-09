@@ -2,11 +2,15 @@ package log
 
 import (
 	"errors"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 	"testing"
+	"time"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
@@ -51,4 +55,32 @@ func TestNewGormLogger(t *testing.T) {
 	}
 	db = db.Debug()
 
+}
+
+func TestNewGinLogger(t *testing.T) {
+	New(&Config{
+		Level:    "info",
+		Filename: "gin.log",
+	})
+
+	handler := gin.New()
+	handler.Use(GinLogger(logger))
+	srv := &http.Server{
+		Addr:           ":1122",
+		Handler:        handler,
+		ReadTimeout:    60 * time.Second,
+		WriteTimeout:   60 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			panic(err.Error())
+		}
+	}()
+	handler.GET("/s", func(c *gin.Context) {
+		fmt.Println(1)
+		return
+	})
+
+	select {}
 }
