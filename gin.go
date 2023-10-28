@@ -16,29 +16,25 @@ import (
 	"net/http/httputil"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 )
 
-const (
-	green   = "\033[97;42m"
-	white   = "\033[90;47m"
-	yellow  = "\033[90;43m"
-	red     = "\033[97;41m"
-	blue    = "\033[97;44m"
-	magenta = "\033[97;45m"
-	cyan    = "\033[97;46m"
-	reset   = "\033[0m"
+var (
+	// 堆栈池
+	stackPool = sync.Pool{
+		// New 方法用于分配新的堆栈内存
+		New: func() interface{} {
+			return make([]byte, 64<<10)
+		},
+	}
+	// 日志排除路径
+	notlogged = []string{"/favicon.ico"}
 )
-
-var notlogged = []string{"/favicon.ico"}
 
 // ConfigGin defines the config for Logger middleware.
 type ConfigGin struct {
-	// Optional. Default value is gin.defaultLogFormatter
-	Formatter Formatter
-
 	// Output is a writer where logs are written.
-	// Optional. Default value is gin.DefaultWriter.
 	Output io.Writer
 
 	// SkipPaths is a url path array which logs are not written.
@@ -46,15 +42,10 @@ type ConfigGin struct {
 	SkipPaths []string
 }
 
-// Formatter gives the signature of the formatter function passed to LoggerWithFormatter
-type Formatter func(params FormatterParams) string
-
 // FormatterParams is the structure any formatter will be handed when time to log comes
 type FormatterParams struct {
 	Request *http.Request
 
-	// TimeStamp shows the time after the server returns a response.
-	TimeStamp time.Time
 	// StatusCode is HTTP response code.
 	StatusCode int
 	// Latency is how much time the server cost to process a certain request.
@@ -75,51 +66,6 @@ type FormatterParams struct {
 	Keys map[string]interface{}
 }
 
-// StatusCodeColor is the ANSI color for appropriately logging http status code to a terminal.
-func (p *FormatterParams) StatusCodeColor() string {
-	code := p.StatusCode
-
-	switch {
-	case code >= http.StatusOK && code < http.StatusMultipleChoices:
-		return green
-	case code >= http.StatusMultipleChoices && code < http.StatusBadRequest:
-		return white
-	case code >= http.StatusBadRequest && code < http.StatusInternalServerError:
-		return yellow
-	default:
-		return red
-	}
-}
-
-// MethodColor is the ANSI color for appropriately logging http method to a terminal.
-func (p *FormatterParams) MethodColor() string {
-	method := p.Method
-
-	switch method {
-	case http.MethodGet:
-		return blue
-	case http.MethodPost:
-		return cyan
-	case http.MethodPut:
-		return yellow
-	case http.MethodDelete:
-		return red
-	case http.MethodPatch:
-		return green
-	case http.MethodHead:
-		return magenta
-	case http.MethodOptions:
-		return white
-	default:
-		return reset
-	}
-}
-
-// ResetColor resets all escape attributes.
-func (p *FormatterParams) ResetColor() string {
-	return reset
-}
-
 // GinLogger instances a Logger middleware that will write the logs to gin.DefaultWriter.
 func GinLogger(logger *zap.Logger) gin.HandlerFunc {
 	return WithWriter(logger, gin.DefaultWriter, notlogged...)
@@ -135,62 +81,63 @@ func WithWriter(logger *zap.Logger, out io.Writer, notlogged ...string) gin.Hand
 }
 
 // WithConfig instance a Logger middleware with config.
+// This function takes in a log, configgin and gin.HandlerFunc as parameters and returns a gin.HandlerFunc
 func WithConfig(log *zap.Logger, conf ConfigGin) gin.HandlerFunc {
+	// Set the output to the configgin's output, or the default writer if the output is nil
 	out := conf.Output
-	// 如果没有设置输出，则使用默认的输出
 	if out == nil {
 		out = gin.DefaultWriter
 	}
-	// 获取需要跳过的路径
-	netlogo := conf.SkipPaths
-	// 是否为终端
+	// Set the isTerm boolean to true if the output is a file, or if the TERM environment variable is set to "dumb" or if the file descriptor is not a terminal or a cygwin terminal
 	isTerm := true
-	// 判断输出是否为终端
 	if w, ok := out.(*os.File); !ok || os.Getenv("TERM") == "dumb" || (!isatty.IsTerminal(w.Fd()) && !isatty.IsCygwinTerminal(w.Fd())) {
 		isTerm = false
 	}
-	var skip map[string]struct{}
-	// 如果需要跳过的路径不为空，则将其存储到 map 中
-	if length := len(netlogo); length > 0 {
-		skip = make(map[string]struct{}, length)
-		for _, path := range netlogo {
-			skip[path] = struct{}{}
-		}
+	// Create a map of paths to skip
+	skip := make(map[string]struct{})
+	for _, path := range conf.SkipPaths {
+		skip[path] = struct{}{}
 	}
-
+	// Return a function that takes in a gin.Context as a parameter
 	return func(c *gin.Context) {
-		// 记录开始时间和请求路径
+		// Set the start time to the current time
 		start := time.Now()
+		// Set the path to the request URL path
 		path := c.Request.URL.Path
+		// Set the raw query to the request URL raw query
 		raw := c.Request.URL.RawQuery
-
-		// 继续处理请求
+		// Call the next handler
 		c.Next()
-
-		// 只有当路径不被跳过时才记录日志
+		// If the path is not in the skip map
 		if _, ok := skip[path]; !ok {
-			// 构造日志参数
+			// Create a FormatterParams struct
 			param := FormatterParams{
 				Request: c.Request,
 				isTerm:  isTerm,
 				Keys:    c.Keys,
 			}
-			// 记录结束时间和请求耗时
-			param.TimeStamp = time.Now()
-			param.Latency = param.TimeStamp.Sub(start)
-			// 记录客户端IP、请求方法、状态码、错误信息和响应体大小
+			// Set the latency to the difference between the current time and the start time
+			param.Latency = time.Since(start)
+			// Set the client IP to the request client IP
 			param.ClientIP = c.ClientIP()
+			// Set the method to the request method
 			param.Method = c.Request.Method
+			// Set the status code to the request writer status
 			param.StatusCode = c.Writer.Status()
+			// Set the error message to the request errors by type private string
 			param.ErrorMessage = c.Errors.ByType(gin.ErrorTypePrivate).String()
+			// Set the body size to the request writer size
 			param.BodySize = c.Writer.Size()
-			// 如果有查询参数，则将其添加到路径中
+			// If the raw query is not empty
 			if raw != "" {
+				// Set the path to the path and raw query
 				path = path + "?" + raw
 			}
+			// Set the path to the parameter
 			param.Path = path
-			// 如果没有错误信息，则记录日志
+			// If the error message is empty
 			if len(param.ErrorMessage) == 0 {
+				// Log the request path, status code, method, user agent, latency, and the request
 				log.Info("[GIN]",
 					zap.String("Path", path),
 					zap.Int("Code", param.StatusCode),
@@ -198,49 +145,44 @@ func WithConfig(log *zap.Logger, conf ConfigGin) gin.HandlerFunc {
 					zap.String("User-Agent", c.Request.UserAgent()),
 					zap.String("Latency", param.Latency.String()),
 				)
+				// If the error message is not empty
 			} else {
-				for _, e := range c.Errors.Errors() {
-					log.Error(e)
-				}
+				// Log the error message
+				log.Error(param.ErrorMessage)
 			}
 		}
 	}
 }
 
-// Recovery 使用zap替换gin内部的recovery模块
+// Recovery This function is used to recover from panic and log the error
 func Recovery(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var (
-			// 存储原始请求内容的字节数组
-			rawReq []byte
-		)
-		if c.Request != nil {
-			// 获取原始请求内容
-			rawReq, _ = httputil.DumpRequest(c.Request, true)
-		}
+		// Get a stack from the pool
+		stack := stackPool.Get().([]byte)
+		// Defer the put of the stack back into the pool until the function returns
+		defer stackPool.Put(stack[:0])
+		// Defer the execution of the code until the function returns
 		defer func() {
-			// 捕获 panic
+			// Create a byte array to store the request
+			var rawReq []byte
+			// If the request is not nil, dump it into the byte array
+			if c.Request != nil {
+				rawReq, _ = httputil.DumpRequest(c.Request, true)
+			}
+			// If there is a panic, log the error
 			if err := recover(); err != nil {
-				const size = 64 << 10
-				stack := make([]byte, size)
-				// 获取堆栈信息
 				stack = stack[:runtime.Stack(stack, false)]
-				// 记录错误日志
 				logger.Error("[Recovery]",
-					// 记录错误信息
+					zap.String("Path", c.Request.RequestURI),
 					zap.Any("Error", err),
-					// 记录原始请求内容
-					zap.String("Request", string(rawReq)),
-					// 记录请求 URI
-					zap.String("RequestURI", c.Request.RequestURI),
-					// 记录堆栈信息
+					zap.ByteString("Request", rawReq),
 					zap.String("Stack", string(stack)),
 				)
-				// 中止请求并返回 500 错误
+				// Abort the request with an internal server error
 				c.AbortWithStatus(http.StatusInternalServerError)
 			}
 		}()
-		// 继续处理请求
+		// Execute the next handler
 		c.Next()
 	}
 }

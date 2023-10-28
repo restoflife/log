@@ -1,3 +1,4 @@
+[log_test](log_test.go)
 ```go
     package app
 
