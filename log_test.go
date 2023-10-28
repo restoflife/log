@@ -16,23 +16,27 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	New(&Config{
-		Level:    "error",
+
+	c := &Config{
+		Level:    "info",
 		Filename: "error.log",
-	})
-	defer Sync()
+	}
+	New(c)
+	defer c.Sync()
 	Info("info")
 	Debug("debug", zap.String("level", "debug"))
 	Error("error", zap.Error(errors.New("error")))
 }
 
 func TestNewXormLogger(t *testing.T) {
-	New(&Config{
+	c := &Config{
 		Level:    "info",
 		Filename: "sql.log",
 		MaxSize:  1,
-	})
-	defer Sync()
+	}
+	New(c)
+	defer c.Sync()
+	//defer Sync()
 	db, err := xorm.NewEngine("mysql", "root:mysql@tcp(127.0.0.1:3308)/gon?charset=utf8mb4&parseTime=True&loc=Local")
 	if err != nil {
 		return
@@ -43,10 +47,13 @@ func TestNewXormLogger(t *testing.T) {
 	db.Table("xx").Where(builder.Eq{"id": 1}).Exist()
 }
 func TestNewGormLogger(t *testing.T) {
-	New(&Config{
-		Level:    "warn",
+	c := &Config{
+		Level:    "info",
 		Filename: "sql.log",
-	})
+		MaxSize:  1,
+	}
+	New(c)
+	defer c.Sync()
 	type Xx struct {
 		Id   int
 		Name string
@@ -60,7 +67,7 @@ func TestNewGormLogger(t *testing.T) {
 	//		Colorful:                  false,       // Disable color
 	//	},
 	//)
-	defer Sync()
+	//defer Sync()
 	lg := NewGormLogger(Logger())
 	lg.SetAsDefault()
 	dsn := "root:mysql@tcp(127.0.0.1:3308)/gon?charset=utf8mb4&parseTime=True&loc=Local"
@@ -77,7 +84,7 @@ func TestNewGormLogger(t *testing.T) {
 	var result Xx
 
 	//var u []map[string]any
-	err = db.Where("id = ?", 2).Take(&result).Error
+	err = db.Where("id = ?", 1).Take(&result).Error
 	if err != nil {
 		t.Error(err)
 		return
@@ -86,11 +93,14 @@ func TestNewGormLogger(t *testing.T) {
 }
 
 func TestNewGinLogger(t *testing.T) {
-	New(&Config{
+	c := &Config{
 		Level:    "info",
 		Filename: "gin.log",
-	})
-	defer Sync()
+		MaxSize:  1,
+	}
+	New(c)
+	defer c.Sync()
+	//defer Sync()
 	handler := gin.New()
 	handler.Use(Recovery(logger), GinLogger(logger))
 	srv := &http.Server{
@@ -100,14 +110,16 @@ func TestNewGinLogger(t *testing.T) {
 		WriteTimeout:   60 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			panic(err.Error())
-		}
-	}()
+	//go func() {
+	//	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	//		panic(err.Error())
+	//	}
+	//}()
 	handler.GET("/s", func(c *gin.Context) {
 		return
 	})
 
-	select {}
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		panic(err.Error())
+	}
 }

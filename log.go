@@ -184,8 +184,9 @@ func fn(f ...zapcore.Field) []zapcore.Field {
 
 // Sync calls the underlying Core's Sync method, flushing any buffered log
 // entries. Applications should take care to call Sync before exiting.
-func Sync() {
-	if logger != nil {
-		_ = logger.Sync()
+func (l *Config) Sync() {
+	g, e := l.NewLogger()
+	if g != nil && e == nil {
+		_ = g.Sync()
 	}
 }
