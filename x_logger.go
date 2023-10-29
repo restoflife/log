@@ -63,7 +63,6 @@ func (o *XormLogger) AfterSQL(ctx log.LogContext) {
 		// Set the log level to error
 		o.logLvl = zapcore.ErrorLevel
 	}
-
 	// Check if the logger is enabled
 	if check := o.logger.Check(o.logLvl, XORM); check != nil {
 		// Write the SQL statement, execution time, and error to the logger

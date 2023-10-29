@@ -148,7 +148,9 @@ func WithConfig(log *zap.Logger, conf ConfigGin) gin.HandlerFunc {
 				// If the error message is not empty
 			} else {
 				// Log the error message
-				log.Error(param.ErrorMessage)
+				log.Error("[GIN]",
+					zap.String("Path", c.Request.URL.Path),
+					zap.String("Error", param.ErrorMessage))
 			}
 		}
 	}

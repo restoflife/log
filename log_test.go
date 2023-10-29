@@ -26,6 +26,7 @@ func TestNew(t *testing.T) {
 	Info("info")
 	Debug("debug", zap.String("level", "debug"))
 	Error("error", zap.Error(errors.New("error")))
+	Panic("Panic", zap.Error(errors.New("Panic")))
 }
 
 func TestNewXormLogger(t *testing.T) {
