@@ -139,7 +139,7 @@ func WithConfig(log *zap.Logger, conf ConfigGin) gin.HandlerFunc {
 			// If the error message is empty
 			if len(param.ErrorMessage) == 0 {
 				// Log the request path, status code, method, user agent, latency, and the request
-				log.Info(fmt.Sprintf("%5s %-5s", "", ""),
+				log.Info(fmt.Sprintf("%5s %-5s", "[GIN]", ""),
 					zap.String("Path", path),
 					zap.Int("Code", param.StatusCode),
 					zap.String("Method", param.Method),
