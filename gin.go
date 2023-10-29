@@ -8,6 +8,7 @@
 package log
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mattn/go-isatty"
 	"go.uber.org/zap"
@@ -138,7 +139,7 @@ func WithConfig(log *zap.Logger, conf ConfigGin) gin.HandlerFunc {
 			// If the error message is empty
 			if len(param.ErrorMessage) == 0 {
 				// Log the request path, status code, method, user agent, latency, and the request
-				log.Info("[GIN]",
+				log.Info(fmt.Sprintf("%5s %-5s", "", ""),
 					zap.String("Path", path),
 					zap.Int("Code", param.StatusCode),
 					zap.String("Method", param.Method),
@@ -148,7 +149,7 @@ func WithConfig(log *zap.Logger, conf ConfigGin) gin.HandlerFunc {
 				// If the error message is not empty
 			} else {
 				// Log the error message
-				log.Error("[GIN]",
+				log.Error(fmt.Sprintf("%5s %-5s", "[GIN]", ""),
 					zap.String("Path", c.Request.URL.Path),
 					zap.String("Error", param.ErrorMessage))
 			}
