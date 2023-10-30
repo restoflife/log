@@ -82,7 +82,7 @@ func (l *Config) NewLogger() (*zap.Logger, error) {
 		),
 	)
 	// Return a new logger with the created cores
-	return zap.New(zapcore.NewTee(cores...), zap.AddCaller()), nil
+	return zap.New(zapcore.NewTee(cores...)), nil
 }
 
 // Logger This function returns a pointer to the logger
