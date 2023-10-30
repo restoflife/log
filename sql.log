@@ -1,5 +1,0 @@
-2023-10-28T21:01:02.408+0800	ERROR	[GORM]	{"SQL": "SELECT * FROM `xx` WHERE id = 2 LIMIT 1", "Rows": 0, "Latency": "0s", "error": "record not found"}
-2023-10-28T21:09:21.628+0800	ERROR	[GORM]	{"SQL": "SELECT * FROM `xx` WHERE id = 2 LIMIT 1", "Rows": 0, "Latency": "0s", "error": "record not found"}
-2023-10-28T21:51:56.438+0800	INFO	[XORM]	{"SQL": "SELECT 1 FROM `xx` WHERE id=? LIMIT 1 [1]", "Latency": "3.1729ms"}
-2023-10-28T21:52:04.120+0800	INFO	[XORM]	{"SQL": "SELECT 1 FROM `xx` WHERE id=? LIMIT 1 [1]", "Latency": "3.4887ms"}2023-10-28T21:55:01.447+0800	INFO	[GORM]	{"SQL": "SELECT * FROM `xx` WHERE id = 1 LIMIT 1", "Rows": 1, "Latency": "0s"}
-2023-10-28T21:56:07.481+0800	INFO	[GORM]	{"SQL": "SELECT * FROM `xx` WHERE id = 1 LIMIT 1", "Rows": 1, "Latency": "520µs"}

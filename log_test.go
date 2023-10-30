@@ -20,13 +20,62 @@ func TestNew(t *testing.T) {
 	c := &Config{
 		Level:    "info",
 		Filename: "error.log",
+		Console:  "error",
 	}
 	New(c)
 	defer c.Sync()
 	Info("info")
 	Debug("debug", zap.String("level", "debug"))
 	Error("error", zap.Error(errors.New("error")))
-	Panic("Panic", zap.Error(errors.New("Panic")))
+
+	c2 := &Config{
+		Level:    "info",
+		Filename: "sql.log",
+		MaxSize:  1,
+		Console:  "error",
+	}
+	New(c2)
+	defer c2.Sync()
+	//defer Sync()
+	db, err := xorm.NewEngine("mysql", "root:mysql@tcp(127.0.0.1:3306)/gon?charset=utf8mb4&parseTime=True&loc=Local")
+	if err != nil {
+		return
+	}
+	db.SetLogger(NewXormLogger(Logger()))
+	db.ShowSQL(true)
+	defer db.Close()
+	db.Table("xx").Where(builder.Eq{"id": 1}).Exist()
+
+	c3 := &Config{
+		Level:    "info",
+		Filename: "gin.log",
+		MaxSize:  1,
+		Console:  "error",
+	}
+	New(c3)
+	defer c3.Sync()
+	//defer Sync()
+	handler := gin.New()
+	handler.Use(Recovery(Logger()), GinLogger(Logger()))
+	srv := &http.Server{
+		Addr:           ":1122",
+		Handler:        handler,
+		ReadTimeout:    60 * time.Second,
+		WriteTimeout:   60 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	//go func() {
+	//	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	//		panic(err.Error())
+	//	}
+	//}()
+	handler.GET("/s", func(c *gin.Context) {
+		return
+	})
+
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		panic(err.Error())
+	}
 }
 
 func TestNewXormLogger(t *testing.T) {
@@ -103,7 +152,7 @@ func TestNewGinLogger(t *testing.T) {
 	defer c.Sync()
 	//defer Sync()
 	handler := gin.New()
-	handler.Use(Recovery(logger), GinLogger(logger))
+	handler.Use(Recovery(Logger()), GinLogger(Logger()))
 	srv := &http.Server{
 		Addr:           ":1122",
 		Handler:        handler,
@@ -117,6 +166,7 @@ func TestNewGinLogger(t *testing.T) {
 	//	}
 	//}()
 	handler.GET("/s", func(c *gin.Context) {
+		c.Error(errors.New("xxxx"))
 		return
 	})
 

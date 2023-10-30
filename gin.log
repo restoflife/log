@@ -10,3 +10,6 @@
 2023-10-28T21:58:08.423+0800	INFO	[GIN]	{"Path": "/s", "Code": 200, "Method": "GET", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.47", "Latency": "0s"}
 2023-10-29T08:41:36.287+0800	INFO	[GIN]   {"Path": "/s", "Code": 200, "Method": "GET", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.47", "Latency": "0s"}
 2023-10-29T08:42:29.011+0800	INFO	[GIN]	{"Path": "/s", "Code": 200, "Method": "GET", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.47", "Latency": "0s"}
+2023-10-30T09:29:59.740+0800	INFO	[GIN]      	{"Path": "/s", "Code": 200, "Method": "GET", "User-Agent": "PostmanRuntime-ApipostRuntime/1.1.0", "Latency": "0s"}
+2023-10-30T10:24:14.162+0800	INFO	[GIN]	{"Path": "/s", "Code": 200, "Method": "GET", "User-Agent": "PostmanRuntime-ApipostRuntime/1.1.0", "Latency": "0s"}
+2023-10-30T10:25:25.926+0800	ERROR	[GIN]	{"Path": "/s", "Error": "Error #01: xxxx\n"}

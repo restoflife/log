@@ -21,6 +21,8 @@ type Config struct {
 	MaxBackups int `json:"max_backups"`
 	// 设置每个日志文件的最大保存时间
 	MaxAge int `json:"max_age"`
+	// 控制台输出等级
+	Console string `json:"console"`
 }
 
 var logger *zap.Logger
@@ -53,9 +55,9 @@ func (l *Config) NewLogger() (*zap.Logger, error) {
 	cores := make([]zapcore.Core, 0)
 
 	// Create a function to enable debug priority
-	debugPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl <= zapcore.ErrorLevel
-	})
+	//debugPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+	//	return lvl <= zapcore.ErrorLevel
+	//})
 
 	// Append the file core to the slice
 	cores = append(
@@ -76,11 +78,11 @@ func (l *Config) NewLogger() (*zap.Logger, error) {
 		zapcore.NewCore(
 			consoleEncoder,
 			zapcore.Lock(os.Stderr),
-			debugPriority,
+			createLevelEnablerFunc(l.Console),
 		),
 	)
 	// Return a new logger with the created cores
-	return zap.New(zapcore.NewTee(cores...)), nil
+	return zap.New(zapcore.NewTee(cores...), zap.AddCaller()), nil
 }
 
 // Logger This function returns a pointer to the logger
@@ -164,6 +166,12 @@ func Debug(msg string, f ...zapcore.Field) {
 
 func Error(msg string, f ...zapcore.Field) {
 	logger.Error(msg, fn(f...)...)
+}
+
+func ErrorGin(msg string, f ...zapcore.Field) {
+	_, file, line, _ := runtime.Caller(2)
+	f = append(f, zap.String("Func", fmt.Sprintf("%s:%d", file, line)))
+	logger.Error(msg, f...)
 }
 
 func Panic(msg string, f ...zapcore.Field) {
