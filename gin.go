@@ -146,12 +146,12 @@ func WithConfig(log *zap.Logger, conf ConfigGin) gin.HandlerFunc {
 					zap.String("Latency", param.Latency.String()),
 				)
 				// If the error message is not empty
-			} else {
+			} /*else {
 				// Log the error message
 				log.Error("[GIN]",
 					zap.String("Path", c.Request.URL.Path),
 					zap.String("Error", param.ErrorMessage))
-			}
+			}*/
 		}
 	}
 }

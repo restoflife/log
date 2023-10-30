@@ -13,3 +13,4 @@
 2023-10-30T09:29:59.740+0800	INFO	[GIN]      	{"Path": "/s", "Code": 200, "Method": "GET", "User-Agent": "PostmanRuntime-ApipostRuntime/1.1.0", "Latency": "0s"}
 2023-10-30T10:24:14.162+0800	INFO	[GIN]	{"Path": "/s", "Code": 200, "Method": "GET", "User-Agent": "PostmanRuntime-ApipostRuntime/1.1.0", "Latency": "0s"}
 2023-10-30T10:25:25.926+0800	ERROR	[GIN]	{"Path": "/s", "Error": "Error #01: xxxx\n"}
+2023-10-30T10:30:00.734+0800	ERROR	log/gin.go:151	[GIN]	{"Path": "/s", "Error": "Error #01: xxxx\n"}
