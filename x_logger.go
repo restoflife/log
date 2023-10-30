@@ -10,10 +10,10 @@
 package log
 
 import (
-	"bytes"
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"xorm.io/builder"
 	"xorm.io/xorm/log"
 )
 
@@ -28,36 +28,22 @@ type XormLogger struct {
 	level log.LogLevel
 	// logLvl is a zapcore.Level to set the log level
 	logLvl zapcore.Level
-	// buf is a bytes.Buffer to store the log
-	buf *bytes.Buffer
 }
 
 // NewXormLogger Create a new XormLogger with the given zapLogger
 func NewXormLogger(zapLogger *zap.Logger) *XormLogger {
-	// Create a new buffer
-	buf := bytes.NewBuffer(nil)
 	// Return a new XormLogger with the given zapLogger, show set to true, and the buffer
 	return &XormLogger{
 		// logger: zapLogger.Named(XORM),
 		logger: zapLogger,
 		show:   true,
-		buf:    buf,
 	}
 }
 func (o *XormLogger) BeforeSQL(_ log.LogContext) {}
 
 // AfterSQL Function to log SQL statements after they have been executed
 func (o *XormLogger) AfterSQL(ctx log.LogContext) {
-	// Reset the buffer
-	o.buf.Reset()
-	// Write the SQL statement to the buffer
-	o.buf.WriteString(ctx.SQL)
-	// Write a space to the buffer
-	o.buf.WriteByte(' ')
-	// Write the arguments to the buffer
-	o.buf.WriteString(fmt.Sprint(ctx.Args))
-	// Get the SQL statement from the buffer
-	sql := o.buf.String()
+	sql, _ := builder.ConvertToBoundSQL(ctx.SQL, ctx.Args)
 	// Check if an error occurred
 	if ctx.Err != nil {
 		// Set the log level to error

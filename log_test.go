@@ -87,14 +87,14 @@ func TestNewXormLogger(t *testing.T) {
 	New(c)
 	defer c.Sync()
 	//defer Sync()
-	db, err := xorm.NewEngine("mysql", "root:mysql@tcp(127.0.0.1:3308)/gon?charset=utf8mb4&parseTime=True&loc=Local")
+	db, err := xorm.NewEngine("mysql", "root:mysql@tcp(127.0.0.1:3306)/gon?charset=utf8mb4&parseTime=True&loc=Local")
 	if err != nil {
 		return
 	}
 	db.SetLogger(NewXormLogger(Logger()))
 	db.ShowSQL(true)
 	defer db.Close()
-	db.Table("xx").Where(builder.Eq{"id": 1}).Exist()
+	db.Table("xx").Exist()
 }
 func TestNewGormLogger(t *testing.T) {
 	c := &Config{
