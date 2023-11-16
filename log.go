@@ -30,20 +30,11 @@ var logger *zap.Logger
 // New Create a new logger using the configuration
 func New(g *Config) {
 	// Create a new logger using the configuration
-	l, err := g.NewLogger()
-	if err != nil {
-		// Print the error to the standard error stream
-		_, _ = fmt.Fprintln(os.Stderr, err.Error())
-		// Exit the program with a non-zero exit code
-		os.Exit(-1)
-	}
-
-	// Set the logger to the new logger
-	logger = l
+	logger = g.NewLogger()
 }
 
 // NewLogger Create a new logger with the given configuration
-func (l *Config) NewLogger() (*zap.Logger, error) {
+func (l *Config) NewLogger() *zap.Logger {
 
 	// Create a new encoder for the file
 	encoder := createFileEncoder()
@@ -82,7 +73,7 @@ func (l *Config) NewLogger() (*zap.Logger, error) {
 		),
 	)
 	// Return a new logger with the created cores
-	return zap.New(zapcore.NewTee(cores...)), nil
+	return zap.New(zapcore.NewTee(cores...))
 }
 
 // Logger This function returns a pointer to the logger
@@ -193,8 +184,7 @@ func fn(f ...zapcore.Field) []zapcore.Field {
 // Sync calls the underlying Core's Sync method, flushing any buffered log
 // entries. Applications should take care to call Sync before exiting.
 func (l *Config) Sync() {
-	g, e := l.NewLogger()
-	if g != nil && e == nil {
+	if g := l.NewLogger(); g != nil {
 		_ = g.Sync()
 	}
 }
