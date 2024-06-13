@@ -47,7 +47,7 @@ func (o *XormLogger) AfterSQL(ctx log.LogContext) {
 		o.logLvl = zapcore.ErrorLevel
 	}
 	if o.logger.Core().Enabled(o.logLvl) {
-		o.logger.Check(o.logLvl, "SQL").Write(
+		o.logger.Check(o.logLvl, SQL).Write(
 			zap.String("SQL", sql),
 			zap.String("Latency", ctx.ExecuteTime.String()),
 			zap.Error(ctx.Err),
