@@ -32,9 +32,7 @@ type XormLogger struct {
 
 // NewXormLogger Create a new XormLogger with the given zapLogger
 func NewXormLogger(zapLogger *zap.Logger) *XormLogger {
-	// Return a new XormLogger with the given zapLogger, show set to true, and the buffer
 	return &XormLogger{
-		// logger: zapLogger.Named(XORM),
 		logger: zapLogger,
 		show:   true,
 	}
@@ -44,22 +42,21 @@ func (o *XormLogger) BeforeSQL(_ log.LogContext) {}
 // AfterSQL Function to log SQL statements after they have been executed
 func (o *XormLogger) AfterSQL(ctx log.LogContext) {
 	sql, _ := builder.ConvertToBoundSQL(ctx.SQL, ctx.Args)
-	// Check if an error occurred
+	o.logLvl = zapcore.InfoLevel
 	if ctx.Err != nil {
-		// Set the log level to error
 		o.logLvl = zapcore.ErrorLevel
 	}
-	// Check if the logger is enabled
-	if check := o.logger.Check(o.logLvl, XORM); check != nil {
-		// Write the SQL statement, execution time, and error to the logger
-		check.Write(zap.String("SQL", sql), zap.String("Latency", ctx.ExecuteTime.String()), zap.Error(ctx.Err))
+	if o.logger.Core().Enabled(o.logLvl) {
+		o.logger.Check(o.logLvl, "SQL").Write(
+			zap.String("SQL", sql),
+			zap.String("Latency", ctx.ExecuteTime.String()),
+			zap.Error(ctx.Err),
+		)
 	}
-	//o.logger.Check(o.logLvl, XORM).Write(zap.String("SQL", sql), zap.String("Latency", ctx.ExecuteTime.String()), zap.Error(ctx.Err))
 }
 
 // Debugf This function is used to log a debug message with the given format and values
 func (o *XormLogger) Debugf(format string, v ...interface{}) {
-	// Use the logger to log the debug message with the given format and values
 	o.logger.Debug(fmt.Sprintf(format, v...))
 }
 
@@ -120,7 +117,9 @@ func (o *XormLogger) SetLevel(l log.LogLevel) {
 
 // ShowSQL sets the show flag for the XormLogger
 func (o *XormLogger) ShowSQL(b ...bool) {
-	o.show = b[0]
+	if len(b) > 0 {
+		o.show = b[0]
+	}
 }
 
 // IsShowSQL returns the show flag for the XormLogger

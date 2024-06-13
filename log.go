@@ -35,27 +35,16 @@ func New(g *Config) {
 
 // NewLogger Create a new logger with the given configuration
 func (l *Config) NewLogger() *zap.Logger {
-
-	// Create a new encoder for the file
 	encoder := createFileEncoder()
 
-	// Create a new encoder for the console
 	consoleEncoder := createConsoleEncoder()
 
-	// Create a slice of zapcore.Core
 	cores := make([]zapcore.Core, 0)
 
-	// Create a function to enable debug priority
-	//debugPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-	//	return lvl <= zapcore.ErrorLevel
-	//})
-
-	// Append the file core to the slice
 	cores = append(
 		cores,
 		zapcore.NewCore(
 			encoder,
-			// Create a new logger with the given filename, max size, max backups, max age, and local time
 			zapcore.AddSync(&lumberjack.Logger{
 				Filename:   l.Filename,
 				MaxSize:    l.MaxSize,
@@ -65,14 +54,12 @@ func (l *Config) NewLogger() *zap.Logger {
 			}),
 			createLevelEnablerFunc(l.Level),
 		),
-		// Append the console core to the slice
 		zapcore.NewCore(
 			consoleEncoder,
 			zapcore.Lock(os.Stderr),
 			createLevelEnablerFunc(l.Console),
 		),
 	)
-	// Return a new logger with the created cores
 	return zap.New(zapcore.NewTee(cores...))
 }
 
@@ -83,16 +70,11 @@ func Logger() *zap.Logger {
 
 // This function takes a string as input and returns a zap.LevelEnablerFunc
 func createLevelEnablerFunc(input string) zap.LevelEnablerFunc {
-	// Create a new pointer to a zapcore.Level
 	var lv = new(zapcore.Level)
-	// Unmarshal the input string into the Level pointer
 	if err := lv.UnmarshalText([]byte(input)); err != nil {
-		// If there is an error, return nil
 		return nil
 	}
-	// Return a function that takes a zapcore.Level as an input and returns a boolean
 	return func(lev zapcore.Level) bool {
-		// Return true if the input Level is greater than or equal to the Level pointer
 		return lev >= *lv
 	}
 }
@@ -100,22 +82,16 @@ func createLevelEnablerFunc(input string) zap.LevelEnablerFunc {
 // Create a new console encoder with the given configuration
 func createConsoleEncoder() zapcore.Encoder {
 
-	// Create a new development encoder configuration
 	encoderConfig := zap.NewDevelopmentEncoderConfig()
 
-	// Set the encoder to use the timeEncoder function to encode time
 	encoderConfig.EncodeTime = timeEncoder
 
-	// Set the encoder to use the CapitalColorLevelEncoder to encode levels
 	encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 
-	// Set the encoder to use the SecondsDurationEncoder to encode durations
 	encoderConfig.EncodeDuration = zapcore.SecondsDurationEncoder
 
-	// Set the encoder to use the ShortCallerEncoder to encode callers
 	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 
-	// Return a new console encoder with the given configuration
 	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
@@ -124,27 +100,21 @@ func createFileEncoder() zapcore.Encoder {
 
 	encoderConfig := zap.NewProductionEncoderConfig()
 
-	// Set the encoder to use the timeEncoder function to encode time
 	encoderConfig.EncodeTime = timeEncoder
 
-	// Set the encoder to use the CapitalLevelEncoder function to encode the log level
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 
-	// Set the encoder to use the SecondsDurationEncoder function to encode duration
 	encoderConfig.EncodeDuration = zapcore.SecondsDurationEncoder
 
-	// Set the encoder to use the ShortCallerEncoder function to encode the caller
 	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 
-	// Return a new console encoder using the encoder configuration
 	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
 // This function takes a time.Time object and an encoder of type zapcore.PrimitiveArrayEncoder and appends the time in RFC3339Nano format to the encoder
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
-	// Append the time in RFC3339Nano format to the encoder
-	enc.AppendString(t.Format(RFC3339Nano))
+	enc.AppendString(t.Format(time.RFC3339))
 }
 
 func Info(msg string, f ...zapcore.Field) {
@@ -175,9 +145,7 @@ func Fatal(msg string, f ...zapcore.Field) {
 
 // This function takes a variadic number of zapcore.Fields and returns a slice of zapcore.Fields
 func fn(f ...zapcore.Field) []zapcore.Field {
-	// Get the file, line number, and other info of the caller
 	_, file, line, _ := runtime.Caller(2)
-	// Append the file and line number to the variadic number of zapcore.Fields
 	return append(f, zap.String("Func", fmt.Sprintf("%s:%d", file, line)))
 }
 
