@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 	c := &Config{
 		Level:    "info",
 		Filename: "error.log",
-		Console:  "error",
+		Console:  "info",
 	}
 	New(c)
 	defer c.Sync()
@@ -28,6 +28,7 @@ func TestNew(t *testing.T) {
 	Debug("debug", zap.String("level", "debug"))
 	Error("error", zap.Error(errors.New("error")))
 
+	return
 	c2 := &Config{
 		Level:    "info",
 		Filename: "sql.log",

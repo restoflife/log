@@ -69,7 +69,7 @@ func (l *Config) NewLogger() *zap.Logger {
 		zapcore.NewCore(
 			consoleEncoder,
 			zapcore.Lock(os.Stderr),
-			createLevelEnablerFunc(l.Console),
+			customLevelEnablerFunc(l.Console),
 		),
 	)
 	// Return a new logger with the created cores
@@ -79,6 +79,22 @@ func (l *Config) NewLogger() *zap.Logger {
 // Logger This function returns a pointer to the logger
 func Logger() *zap.Logger {
 	return logger
+}
+
+func customLevelEnablerFunc(input string) zap.LevelEnablerFunc {
+	if input == "debug" {
+		return func(lvl zapcore.Level) bool {
+			return lvl == zapcore.DebugLevel || lvl == zapcore.ErrorLevel
+		}
+	}
+
+	var lv = new(zapcore.Level)
+	if err := lv.UnmarshalText([]byte(input)); err != nil {
+		return nil
+	}
+	return func(lev zapcore.Level) bool {
+		return lev >= *lv
+	}
 }
 
 // This function takes a string as input and returns a zap.LevelEnablerFunc
